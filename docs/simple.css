@@ -29,6 +29,7 @@ body {
 }
 
 #game canvas {
+  width: 100%;
   object-fit: contain;
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
