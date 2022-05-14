@@ -125,8 +125,22 @@ const vm = new VM();
 
 // Load a ROM.
 (async function go() {
-  let response = await fetch(ROM_FILENAME);
-  let romBuffer = await response.arrayBuffer();
+  const inputEl = document.createElement('input');
+  inputEl.type = 'file';
+  inputEl.accept = '.gb,.gbc';
+  inputEl.style.position = 'fixed';
+  document.body.appendChild(inputEl);
+  const event = await new Promise((resolve) => inputEl.onchange = resolve);
+  document.body.removeChild(inputEl);
+  const romBuffer = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(event.target.files[0]);
+  }).catch(err => {
+    alert(err);
+    throw err;
+  });
   const extRam = new Uint8Array(JSON.parse(localStorage.getItem('extram')));
   Emulator.start(await binjgbPromise, romBuffer, extRam);
   emulator.setBuiltinPalette(vm.palIdx);
