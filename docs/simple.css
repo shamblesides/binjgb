@@ -256,9 +256,13 @@ body {
 
 
 
-input[type="file"] {
+#load {
   position: absolute;
   top: 20vh;
   left: 25vw;
+  visibility: hidden;
+}
+#load input, #load button {
   font-size: 4vw;
+  margin: 3vh;
 }
