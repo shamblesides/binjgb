@@ -119,14 +119,19 @@ class VM {
 
   updateExtRam() {
     if (!emulator) return;
+
+    const IS_POKEMON_RBY = [
+      'ea9bcae617fdf159b045185467ae58b2e4a48b9a', // Red
+      'd7037c83e1ae5b39bde3c30787637ba1d4c48ce2', // Blue
+    ].includes(romHash);
+
     const extRAM = emulator.getExtRam();
     const oldExtram = new Uint8Array(JSON.parse(localStorage.getItem('extram.'+romHash)));
     let bytesChanged = Math.abs(extRAM.length - oldExtram.length);
     for (let i = 0; i < extRAM.length && i < oldExtram.length; ++i) {
-      // const IS_POKEMON_RBY = true;
-      // if (IS_POKEMON_RBY && i < 0x0598) {
-      //   continue;
-      // }
+      if (IS_POKEMON_RBY && i < 0x0598) {
+        continue;
+      }
       if (extRAM[i] !== oldExtram[i]) {
         ++bytesChanged;
       }
