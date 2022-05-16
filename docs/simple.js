@@ -10,7 +10,7 @@
 "use strict";
 
 // User configurable.
-const BACKUP_API = `https://pokesave.nfshost.com`
+const BACKUP_API = 'https://pokesave.nfshost.com';
 const ROM_FILENAME = 'porklike.gb';
 const ENABLE_FAST_FORWARD = true;
 const ENABLE_REWIND = true;
@@ -181,7 +181,25 @@ const vm = new VM();
   });
   romHash = SHA1Digest(romBuffer);
   localStorage.setItem('lastrom', JSON.stringify(Array.from(new Uint8Array(romBuffer))));
-  const extRam = new Uint8Array(JSON.parse(localStorage.getItem('extram.'+romHash)));
+  let extRam = new Uint8Array(JSON.parse(localStorage.getItem('extram.'+romHash)));
+  if (extRam.length === 0) {
+    const tryToGetBackup = confirm('No local save data found! Look for a backup?');
+    if (tryToGetBackup) {
+      try {
+        const backupPaths = await fetch(`${BACKUP_API}/saves?rom=${romHash}`).then(res => res.json());
+        const lastBackupPath = backupPaths.pop();
+        if (lastBackupPath) {
+          extRam = new Uint8Array(await fetch(`${BACKUP_API}/download/${lastBackupPath}`).then(res => res.arrayBuffer()));
+          alert('Restored!')
+        } else {
+          alert('No backups found; starting new game')
+        }
+      } catch (err) {
+        alert(`Error restoring: ${err.message || err}`)
+        throw err;
+      }
+    }
+  }
   Emulator.start(await binjgbPromise, romBuffer, extRam);
   emulator.setBuiltinPalette(vm.palIdx);
 })();
