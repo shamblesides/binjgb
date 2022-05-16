@@ -74,6 +74,8 @@ const aEl = $('#controller_a');
 
 const binjgbPromise = Binjgb();
 
+let romHash = null;
+
 // Extract stuff from the vue.js implementation in demo.js.
 class VM {
   constructor() {
@@ -116,8 +118,22 @@ class VM {
 
   updateExtRam() {
     if (!emulator) return;
-    const extram = emulator.getExtRam();
-    localStorage.setItem('extram', JSON.stringify(Array.from(extram)));
+    const extRAM = emulator.getExtRam();
+    // if (IS_POKEMON_RBY) {
+    //   // zero-out unimportant "scratch buffer" data for pokemon rby
+    //   for (let i = 0; i < 0x0598; ++i) {
+    //     extRAM[i] = 0;
+    //   }
+    // }
+    const oldExtram = new Uint8Array(JSON.parse(localStorage.getItem('extram.'+romHash) || localStorage.getItem('extram') || '[]'));
+    let bytesChanged = Math.abs(extRAM.length - oldExtram.length);
+    for (let i = 0; i < extRAM.length && i < oldExtram.length; ++i) {
+      if (extRAM[i] !== oldExtram[i]) ++ bytesChanged;
+    }
+    if (bytesChanged > 0) {
+      console.log(`updating external RAM (${bytesChanged} bytes changed. sha1: ${SHA1Digest(extRAM.buffer)})`);
+      localStorage.setItem('extram.'+romHash, JSON.stringify(Array.from(extRAM)));
+    }
   }
 };
 
@@ -153,8 +169,9 @@ const vm = new VM();
     alert(err);
     throw err;
   });
+  romHash = SHA1Digest(romBuffer);
   localStorage.setItem('lastrom', JSON.stringify(Array.from(new Uint8Array(romBuffer))));
-  const extRam = new Uint8Array(JSON.parse(localStorage.getItem('extram')));
+  const extRam = new Uint8Array(JSON.parse(localStorage.getItem('extram.'+romHash) || localStorage.getItem('extram')));
   Emulator.start(await binjgbPromise, romBuffer, extRam);
   emulator.setBuiltinPalette(vm.palIdx);
 })();
