@@ -189,7 +189,7 @@ const vm = new VM();
         const backupPaths = await fetch(`${BACKUP_API}/saves?rom=${romHash}`).then(res => res.json());
         const lastBackupPath = backupPaths.pop();
         if (lastBackupPath) {
-          extRam = new Uint8Array(await fetch(`${BACKUP_API}/download/${lastBackupPath}`).then(res => res.arrayBuffer()));
+          extRam = new Uint8Array(await fetch(`${BACKUP_API}/${lastBackupPath}`).then(res => res.arrayBuffer()));
           alert('Restored!')
         } else {
           alert('No backups found; starting new game')
