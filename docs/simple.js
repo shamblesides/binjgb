@@ -10,6 +10,7 @@
 "use strict";
 
 // User configurable.
+const BACKUP_API = `https://pokesave.nfshost.com`
 const ROM_FILENAME = 'porklike.gb';
 const ENABLE_FAST_FORWARD = true;
 const ENABLE_REWIND = true;
@@ -119,20 +120,24 @@ class VM {
   updateExtRam() {
     if (!emulator) return;
     const extRAM = emulator.getExtRam();
-    // if (IS_POKEMON_RBY) {
-    //   // zero-out unimportant "scratch buffer" data for pokemon rby
-    //   for (let i = 0; i < 0x0598; ++i) {
-    //     extRAM[i] = 0;
-    //   }
-    // }
     const oldExtram = new Uint8Array(JSON.parse(localStorage.getItem('extram.'+romHash) || localStorage.getItem('extram') || '[]'));
     let bytesChanged = Math.abs(extRAM.length - oldExtram.length);
     for (let i = 0; i < extRAM.length && i < oldExtram.length; ++i) {
-      if (extRAM[i] !== oldExtram[i]) ++ bytesChanged;
+      // const IS_POKEMON_RBY = true;
+      // if (IS_POKEMON_RBY && i < 0x0598) {
+      //   continue;
+      // }
+      if (extRAM[i] !== oldExtram[i]) {
+        ++bytesChanged;
+      }
     }
     if (bytesChanged > 0) {
       console.log(`updating external RAM (${bytesChanged} bytes changed. sha1: ${SHA1Digest(extRAM.buffer)})`);
       localStorage.setItem('extram.'+romHash, JSON.stringify(Array.from(extRAM)));
+      fetch(`${BACKUP_API}/upload?rom=${romHash}`, {
+        method: 'POST',
+        body: extRAM,
+      });
     }
   }
 };
