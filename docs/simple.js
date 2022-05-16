@@ -120,7 +120,7 @@ class VM {
   updateExtRam() {
     if (!emulator) return;
     const extRAM = emulator.getExtRam();
-    const oldExtram = new Uint8Array(JSON.parse(localStorage.getItem('extram.'+romHash) || localStorage.getItem('extram') || '[]'));
+    const oldExtram = new Uint8Array(JSON.parse(localStorage.getItem('extram.'+romHash)));
     let bytesChanged = Math.abs(extRAM.length - oldExtram.length);
     for (let i = 0; i < extRAM.length && i < oldExtram.length; ++i) {
       // const IS_POKEMON_RBY = true;
@@ -176,7 +176,7 @@ const vm = new VM();
   });
   romHash = SHA1Digest(romBuffer);
   localStorage.setItem('lastrom', JSON.stringify(Array.from(new Uint8Array(romBuffer))));
-  const extRam = new Uint8Array(JSON.parse(localStorage.getItem('extram.'+romHash) || localStorage.getItem('extram')));
+  const extRam = new Uint8Array(JSON.parse(localStorage.getItem('extram.'+romHash)));
   Emulator.start(await binjgbPromise, romBuffer, extRam);
   emulator.setBuiltinPalette(vm.palIdx);
 })();
