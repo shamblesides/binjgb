@@ -151,36 +151,23 @@ const vm = new VM();
 
 // Load a ROM.
 (async function go() {
-  const lastROM = new Uint8Array(JSON.parse(localStorage.getItem('lastrom') || '[]'));
-  if (lastROM.length > 0) {
-    const nameAddr = 0x0134;
-    const name = String.fromCharCode(...lastROM.slice(nameAddr, nameAddr + 15));
-    document.getElementById('continue').innerText = `Continue playing ${name}`;
-    document.getElementById('continue').style.visibility = 'visible';
-  }
-  document.getElementById('load').style.visibility = 'visible';
-  const romBuffer = await Promise.race([
-    new Promise((resolve, reject) => {
-      document.querySelector('#load input[type=file]').onchange = (event) => {
-        document.getElementById('load').remove();
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsArrayBuffer(event.target.files[0]);
-      };
-    }),
-    new Promise((resolve, reject) => {
-      document.querySelector('#continue').onclick = (event) => {
-        document.getElementById('load').remove();
-        resolve(lastROM.buffer);
-      };
-    })
-  ]).catch(err => {
+  const inputEl = document.createElement('input');
+  inputEl.type = 'file';
+  inputEl.accept = '.gb,.gbc';
+  inputEl.style.position = 'fixed';
+  document.body.appendChild(inputEl);
+  const event = await new Promise((resolve) => inputEl.onchange = resolve);
+  document.body.removeChild(inputEl);
+  const romBuffer = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(event.target.files[0]);
+  }).catch(err => {
     alert(err);
     throw err;
   });
   romHash = SHA1Digest(romBuffer);
-  localStorage.setItem('lastrom', JSON.stringify(Array.from(new Uint8Array(romBuffer))));
   let extRam = new Uint8Array(JSON.parse(localStorage.getItem('extram.'+romHash)));
   if (extRam.length === 0) {
     const tryToGetBackup = confirm('No local save data found! Look for a backup?');
