@@ -10,7 +10,7 @@
 "use strict";
 
 // User configurable.
-const BACKUP_API = 'https://pokesave.nfshost.com';
+const BACKUP_API = 'https://api.clayloam.com/romsav';
 const ROM_FILENAME = 'porklike.gb';
 const ENABLE_FAST_FORWARD = true;
 const ENABLE_REWIND = true;
@@ -139,7 +139,7 @@ class VM {
     if (bytesChanged > 0) {
       console.log(`updating external RAM (${bytesChanged} bytes changed. sha1: ${SHA1Digest(extRAM.buffer)})`);
       localStorage.setItem('extram.'+romHash, JSON.stringify(Array.from(extRAM)));
-      fetch(`${BACKUP_API}/upload?rom=${romHash}`, {
+      fetch(`${BACKUP_API}/${romHash}`, {
         method: 'POST',
         body: extRAM,
       });
@@ -173,10 +173,11 @@ const vm = new VM();
     const tryToGetBackup = confirm('No local save data found! Look for a backup?');
     if (tryToGetBackup) {
       try {
-        const backupPaths = await fetch(`${BACKUP_API}/saves?rom=${romHash}`).then(res => res.json());
+        const backupPaths = await fetch(`${BACKUP_API}/json/${romHash}`).then(res => res.json());
         const lastBackupPath = backupPaths.pop();
         if (lastBackupPath) {
-          extRam = new Uint8Array(await fetch(`${BACKUP_API}/${lastBackupPath}`).then(res => res.arrayBuffer()));
+          const res = await fetch(`${BACKUP_API}/${lastBackupPath}`);
+          extRam = new Uint8Array(await res.arrayBuffer());
           alert('Restored!')
         } else {
           alert('No backups found; starting new game')
